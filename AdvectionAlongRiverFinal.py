@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from openpyxl.workbook import Workbook
 from openpyxl import load_workbook
 
 """
@@ -32,36 +31,39 @@ wb = load_workbook("/Users/nadia/Downloads/NumericalModeling/Homework/finalProje
 ws = wb.active
 
 # the dx is currently set to 7 due to the variety in distances between the velocity measurements
-dx = 7 # kilometers
+dx = 1000 # meters
 
 # the distance from USGS site #07091200 to the border between Colorado and Kansas
-x = np.arange(0, 363, dx)  #kilometers
+x = np.arange(0, 363000, dx)  #meters
 nodes = len(x)
 
-#velocity in ft/s
+#velocity in km/s
 u = np.zeros(nodes)
-u[(x<60.433)] = ws['B2'].value #site number 7091200
-u[(60.433<=x) & (x<133.863)] = ws['B3'].value  #site number 7094500
-u[(133.863<=x) & (x<150.633)] = ws['B4'].value  # site number 7099973
-u[(150.633<=x) & (x<253.793)] =  ws['B5'].value  # site number 7109500
-u[(253.793<=x) & (x<279.563)] =  ws['B6'].value  # site number 71224000
-u[(279.563<=x) & (x<310.262)] =  ws['B7'].value  # site number 7130500
-u[(310.262<=x) & (x<336.549)] =  ws['B8'].value  # site number 7130500
-u[(336.549<=x) & (x<354.592)] =  ws['B9'].value  # site number 7134180
-u[(354.592<x)] = ws['B10'].value  # site number 7135500
+u[(x<60433)] = ws['E2'].value #site number 7091200
+u[(60433<=x) & (x<133863)] = ws['E3'].value  #site number 7094500
+u[(133863<=x) & (x<150633)] = ws['E4'].value  # site number 7099973
+u[(150633<=x) & (x<253793)] =  ws['E5'].value  # site number 7109500
+u[(253793<=x) & (x<279563)] =  ws['E6'].value  # site number 71224000
+u[(279563<=x) & (x<310262)] =  ws['E7'].value  # site number 7130500
+u[(310262<=x) & (x<336549)] =  ws['E8'].value  # site number 7130500
+u[(336549<=x) & (x<354592)] =  ws['E9'].value  # site number 7134180
+u[(354592<x)] = ws['E10'].value  # site number 7135500
 
 
 # the concentration of nitrate that is released 60.433 km from the start site
 C = np.zeros(nodes)
-C[(x<=60.433)] = 100 # mg/L
+C[(x<=30216)] = 100 # mg/L
+
 
 
 # plot the initial condtions
 plt.figure()
 plt.plot(x,u)
-plt.xlabel("Distance (km)")
-plt.ylabel("Velocity (ft/s)")
-plt.title("River Velocity")
+plt.xticks(rotation=45, ha='right')
+plt.xlabel("Distance (m)")
+plt.ylabel("Velocity (m/s)")
+plt.title("Average Spring and Summer Arkansas River Velocity Through Space")
+plt.tight_layout()
 
 
 'SET UP THE A MATRIX'
@@ -73,16 +75,15 @@ dt = dx/np.max(u) # seconds
 courant = dt*u/dx
 
 A = np.zeros((nodes, nodes))
+
 for i in range(1,nodes-1):
-    if i >0:
-        A[i,i] = 1 - courant[i]
-        A[i, i-1]  = courant[i]
-        
-A[0, 0] = 1
-A[-1, -1] = 1
+    if i > 0:
+        A[i,i]= 1-courant[i]
+        A[i,i-1]= courant[i]
+
 
 seconds = 0
-endtime = 60*60*24  #one day
+endtime = 60*60*24  #1 day
 
 fig, ax = plt.subplots(1,1)
 ax.plot(x,C, '--k', label = "initial")
@@ -92,16 +93,17 @@ ax.plot(x,C, '--k', label = "initial")
 while seconds <= endtime:
     C_new = np.dot(A, C)
     C[:] = C_new*1
-    
     seconds += dt
-    
+   
     
 'PLOT THE FINAL CONDITIONS'
 
 # note that this code does not currently display the final concentration graph correctly
-ax.plot(x, C, label = "1 hour") 
+ax.plot(x, C, label = "1 day") 
 ax.set_xlabel("Distance (m)")
 ax.set_ylabel("Concentration (mg/L)")
-ax.set_title("Steady state conditions")  
+ax.set_title("Nitrate Advection in Over One Day Through the Arkansas River") 
+plt.xticks(rotation=45, ha='right')
+fig.tight_layout()
 plt.legend()
 plt.show()
